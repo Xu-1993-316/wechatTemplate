@@ -1,0 +1,47 @@
+.page {
+    background-color: #f8f8f8;
+    padding-bottom: 2rem;
+}
+
+.form-title {
+    padding: .346667rem .4rem;
+    font-size: .426667rem;
+    color: #333;
+    font-weight: bolder;
+}
+
+.input-container {
+    background-color: #fff;
+    padding: 0 .4rem;
+}
+
+.agree-group {
+    margin: .266667rem auto;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 1.493333rem;
+    line-height: 1.493333rem;
+    clear: both;
+}
+
+.footer-btn {
+    float: left;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    font-size: .48rem;
+    background-color: #fff;
+}
+
+.footer-btn:last-child {
+    color: #fff;
+    background-color: #D6D6D6;
+}
+
+.footer-btn.active {
+    background-image: linear-gradient(48deg, #FFB237 0%, #FF8723 100%);
+}
