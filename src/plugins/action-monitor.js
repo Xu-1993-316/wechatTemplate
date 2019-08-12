@@ -1,373 +1,337 @@
 /**
-* author: 吴榕根
-* createdAt: 2017/12/14
-* descript: 用户行为检测,监听定制的用户点击行为以及重要的标签内容
-*/
+ * author: 吴榕根
+ * createdAt: 2017/12/14
+ * descript: 用户行为检测,监听定制的用户点击行为以及重要的标签内容
+ */
 
-import { uuid } from '../common/helpers/utils.js';
+import {
+  uuid
+} from '../common/helpers/utils.js';
 
 var install = function (Vue, options) {
-    var options = options || {};
-    var CLICK_TAG = 'click-tag';
-    var INPUT_TAG = 'input-tag';
-    var PHONE_MOBILE_TAG = 'phone-number';
-    var PAGE_TITLE = 'page-title';
-    var scope = options.scope;
-    var apiUrl = null;
+  var options = options || {},
+    CLICK_TAG = 'click-tag',
+    INPUT_TAG = 'input-tag',
+    PHONE_MOBILE_TAG = 'phone-number',
+    PAGE_TITLE = 'page-title',
+    scope = options.scope,
+    apiUrl = null,
+    jsonParser = {
+      stringify: function (obj) {
+        return '{}';
+      },
+      parse: function (text) {
+        return eval('(' + text + ')');
+      }
+    },
+    JSON = window.JSON || jsonParser;
 
-    var jsonParser = {
-        stringify: function(obj) {
-            return '{}';
-        },
-        parse: function(text) {
-            return eval('(' + text + ')');
-        }
+  // 调用方式 var monitor = new ActionMonitor(['openId', 'name'], '/stargate/rest/v0/action/track');
+  var ActionMonitor = function (keyArr, apiUrl) {
+    var _this = this;
+    this.apiUrl = apiUrl;
+    var userid = localStorage.getItem('userid');
+    var sessionid = sessionStorage.getItem('sessionid');
+
+    keyArr = keyArr || [];
+    keyArr.push('userid');
+    keyArr.push('sessionid');
+    this.keyArr = keyArr;
+
+    try {
+      setTimeout(function () {
+        _this.onClickDom();
+      }, 500);
+    } catch (e) {
+      console.log(e);
     }
 
-    var JSON = window.JSON || jsonParser;
+    if (!userid) {
+      localStorage.setItem('userid', uuid());
+    }
 
-    // 调用方式 var monitor = new ActionMonitor(['openId', 'name'], '/stargate/rest/v0/action/track');
-    var ActionMonitor = function (keyArr, apiUrl) {
-        var _this = this;
-        this.apiUrl = apiUrl;
-        var userid = localStorage.getItem('userid');
-        var sessionid = sessionStorage.getItem('sessionid');
+    if (!sessionid) {
+      sessionStorage.setItem('sessionid', uuid());
+    }
 
-        keyArr = keyArr || [];
-        keyArr.push('userid');
-        keyArr.push('sessionid');
-        this.keyArr = keyArr;
-        
-        try{
-            setTimeout(function() {
-                // _this.sendPV();
-                _this.onClickDom();
-            }, 500);
-        } catch(e) {
-            console.log(e);
-        }
+  };
 
-        if (!userid) {
-            localStorage.setItem('userid', uuid());
-        }
+  ActionMonitor.prototype.onClickDom = function () {
+    var _this = this;
+    var body = document.body;
 
-        if (!sessionid) {
-            sessionStorage.setItem('sessionid', uuid());
-        }
-        
+    body.onclick = function (evt) {
+
+      var evt = evt || window.event;
+      var target = evt.target || evt.srcElement;
+      var url = location.href;
+
+      if (target[CLICK_TAG] || target.hasAttribute(CLICK_TAG)) {
+        var id = target[CLICK_TAG] || target.getAttribute(CLICK_TAG);
+        _this.sendInput(id);
+      }
+
+    }
+  }
+
+  ActionMonitor.prototype.sendInput = function (element) {
+    var _this = this;
+    var url = location.href;
+    var phoneDom = document.querySelector('[' + PHONE_MOBILE_TAG + ']');
+    var phoneNumber = phoneDom ? getValue(phoneDom) : null;
+    var titleDom = document.querySelector('[' + PAGE_TITLE + ']');
+    var pageTitle = titleDom ? getValue(titleDom) : null;
+
+    var params = {
+      url: url
     };
 
-    ActionMonitor.prototype.sendPV = function () {
-        var _this = this;
-        // var params = {
-        //     'url': location.href
-        // };
-
-        // // for (var i in this.keyArr) {
-        // for (var i = 0; i < this.keyArr.length; i++){
-        //     var key = this.keyArr[i];
-        //     var value;
-        //     // 判断是否有sessionStorage
-        //     if (window.sessionStorage && (value = sessionStorage.getItem(key))) {
-        //         try{
-        //             params[key] = JSON.parse(value);
-        //         } catch(e) {
-        //             params[key] = value;
-        //         }
-        //     } else {
-        //         var cookieObj = parseCookie();
-        //         if (cookieObj[key]) {
-        //             params[key] = cookieObj[key];
-        //         } else if (parseUrl()[key]) {
-        //             params[key] = parseUrl()[key];
-        //         }
-        //     }
-        // }
-
-        try{    
-            _this.sendInput();
-        } catch(e) {
-            console.log(e);
-        }
-        
+    if (phoneNumber) {
+      params.phoneNumber = phoneNumber;
+    }
+    if (pageTitle) {
+      params.pageTitle = pageTitle;
     }
 
-    ActionMonitor.prototype.onClickDom = function () {
-        var _this = this;
-        var body = document.body;
-
-        body.onclick = function (evt) {
-            
-            var evt = evt || window.event;
-            var target = evt.target || evt.srcElement;
-            var url = location.href;
-
-            if (target[CLICK_TAG] || target.hasAttribute(CLICK_TAG)) {
-                var id = target[CLICK_TAG] || target.getAttribute(CLICK_TAG);
-                _this.sendInput(id);
-            }
-
-        }
+    if (element) {
+      params.element = element;
     }
 
-    ActionMonitor.prototype.sendInput = function(element) {
-        var _this = this;
-        var url = location.href;
-        var phoneDom = document.querySelector('[' + PHONE_MOBILE_TAG + ']');
-        var phoneNumber = phoneDom ? getValue(phoneDom) : null;
-        var titleDom = document.querySelector('[' + PAGE_TITLE + ']');
-        var pageTitle = titleDom ? getValue(titleDom) : null;
-        
-        var params = { url: url};
-
-        if (phoneNumber) {
-            params.phoneNumber = phoneNumber;
+    // for (var i in this.keyArr) {
+    for (var i = 0; i < this.keyArr.length; i++) {
+      var key = this.keyArr[i];
+      var value;
+      if (window.sessionStorage && (value = sessionStorage.getItem(key))) {
+        try {
+          params[key] = JSON.parse(value);
+        } catch (e) {
+          params[key] = value;
         }
-        if (pageTitle) {
-            params.pageTitle = pageTitle;
+      } else if (window.localStorage && (value = localStorage.getItem(key))) {
+        try {
+          params[key] = JSON.parse(value);
+        } catch (e) {
+          params[key] = value;
         }
-
-        if (element) {
-            params.element = element;
-        }
-
-        // for (var i in this.keyArr) {
-        for (var i = 0; i < this.keyArr.length; i++){
-            var key = this.keyArr[i];
-            var value;
-            if (window.sessionStorage && (value = sessionStorage.getItem(key))) {
-                try{
-                    params[key] = JSON.parse(value);
-                } catch(e) {
-                    params[key] = value;
-                }
-            } else if (window.localStorage && (value = localStorage.getItem(key))) {
-                try{
-                    params[key] = JSON.parse(value);
-                } catch(e) {
-                    params[key] = value;
-                }
-            } else {
-                var cookieObj = parseCookie();
-                if (cookieObj[key]) {
-                    params[key] = cookieObj[key];
-                } else {
-                    params[key] = parseUrl()[key];
-                }
-            }
-        }
-
-        var inputs = document.querySelectorAll('[' + INPUT_TAG + ']');
-        // console.log(inputs)
-        for (var k in inputs) {
-        // for (var i = 0; i < inputs.length; i++){
-            
-            var inputItem = inputs[k];
-            // var key = inputItem.getAttribute(INPUT_TAG);
-
-            if (typeof inputItem == 'object') {
-                var key = inputItem[INPUT_TAG] || inputItem.getAttribute(INPUT_TAG);
-            }
-            
-            if (!params[key]) {
-                var val = getValue(inputItem);
-                if (val && val !== '') {
-                    params[key] = val;
-                }
-            }
-            
-        }
-        post(this.apiUrl, params);
-    }
-
-    ActionMonitor.prototype.trackEvent = function(opt) {
-        var _this = this;
-        var url = location.href;
-        var phoneDom = document.querySelector('[' + PHONE_MOBILE_TAG + ']');
-        var phoneNumber = phoneDom ? getValue(phoneDom) : null;
-        var titleDom = document.querySelector('[' + PAGE_TITLE + ']');
-        var pageTitle = titleDom ? getValue(titleDom) : null;
-        var opt = opt || {};
-        
-        var params = { url: url};
-
-        if (phoneNumber) {
-            params.phoneNumber = phoneNumber;
-        }
-        if (pageTitle) {
-            params.pageTitle = pageTitle;
-        }
-
-        params.element = 'trackEvent';
-
-        Object.keys(opt).forEach(function(key) {
-            params[key] = opt[key]
-        })
-
-        // for (var i in this.keyArr) {
-        for (var i = 0; i < this.keyArr.length; i++){
-            var key = this.keyArr[i];
-            var value;
-            if (window.sessionStorage && (value = sessionStorage.getItem(key))) {
-                try{
-                    params[key] = JSON.parse(value);
-                } catch(e) {
-                    params[key] = value;
-                }
-            } else if (window.localStorage && (value = localStorage.getItem(key))) {
-                try{
-                    params[key] = JSON.parse(value);
-                } catch(e) {
-                    params[key] = value;
-                }
-            } else {
-                var cookieObj = parseCookie();
-                if (cookieObj[key]) {
-                    params[key] = cookieObj[key];
-                } else {
-                    params[key] = parseUrl()[key];
-                }
-            }
-        }
-
-        var inputs = document.querySelectorAll('[' + INPUT_TAG + ']');
-        // console.log(inputs)
-        for (var k in inputs) {
-        // for (var i = 0; i < inputs.length; i++){
-            
-            var inputItem = inputs[k];
-            // var key = inputItem.getAttribute(INPUT_TAG);
-
-            if (typeof inputItem == 'object') {
-                var key = inputItem[INPUT_TAG] || inputItem.getAttribute(INPUT_TAG);
-            }
-            
-            if (!params[key]) {
-                var val = getValue(inputItem);
-                if (val && val !== '') {
-                    params[key] = val;
-                }
-            }
-            
-        }
-        post(this.apiUrl, params);
-
-        // 将百度埋点统一进来
-        if (window._hmt && opt.page && opt.event) {
-            _hmt.push(['_trackEvent', opt.page, 'click', opt.event]);
-        }
-    }
-
-    ActionMonitor.prototype.trackPageview = function(opt) {
-        this.trackEvent(opt);
-
-        // 将百度埋点统一进来
-        if (window._hmt && opt.page) {
-            _hmt.push(['_trackPageview', opt.page]);
-        }
-    }
-
-    function post(url, params) {
-        var xhr = new XMLHttpRequest();
-        var jsonData = JSON.stringify(params);
-
-        if (!url) {
-            throw new Error('action-monitor: request url is null');
-            return;
-        }
-
-        xhr.open('POST', url, true);
-        xhr.setRequestHeader('Content-type', 'application/json');
-
-        xhr.send(jsonData);
-
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                // console.log('action monitor => request success');
-            }
-        }
-    };
-
-    function getValue(dom) {
-        var tagName = dom.tagName;
-        
-        if (tagName == 'INPUT') {
-            
-            if (dom.type == "checkbox" ) {
-                if (dom.checked) {
-                    return true;
-                }
-            } else if (dom.type == 'radio') {
-                if (dom.checked) {
-                    return dom.value;
-                } else {
-                    return null;
-                }
-            } else {
-                return dom.value;
-            }
-            
-        } else if (tagName == 'TEXTAREA' || tagName == 'SELECT') {
-            return dom.value;
+      } else {
+        var cookieObj = parseCookie();
+        if (cookieObj[key]) {
+          params[key] = cookieObj[key];
         } else {
-            return dom.innerText;
+          params[key] = parseUrl()[key];
         }
+      }
     }
 
-    function parseCookie() {
-        var cookie = document.cookie;
-        var splitItems = cookie.split(';');
-        var params = {};
+    var inputs = document.querySelectorAll('[' + INPUT_TAG + ']');
+    // console.log(inputs)
+    for (var k in inputs) {
+      // for (var i = 0; i < inputs.length; i++){
 
-        // for (var i in splitItems) {
-        for (var i = 0; i < splitItems.length; i++){
-            var spItem = splitItems[i];
-            var itemArr = spItem.split('=');
-            if (itemArr.length > 1) {
-                params[itemArr[0].trim()] = itemArr[1];
-            }
+      var inputItem = inputs[k];
+      // var key = inputItem.getAttribute(INPUT_TAG);
+
+      if (typeof inputItem == 'object') {
+        var key = inputItem[INPUT_TAG] || inputItem.getAttribute(INPUT_TAG);
+      }
+
+      if (!params[key]) {
+        var val = getValue(inputItem);
+        if (val && val !== '') {
+          params[key] = val;
         }
+      }
 
-        return params;
+    }
+    post(this.apiUrl, params);
+  }
+
+  ActionMonitor.prototype.trackEvent = function (opt) {
+    var _this = this;
+    var url = location.href;
+    var phoneDom = document.querySelector('[' + PHONE_MOBILE_TAG + ']');
+    var phoneNumber = phoneDom ? getValue(phoneDom) : null;
+    var titleDom = document.querySelector('[' + PAGE_TITLE + ']');
+    var pageTitle = titleDom ? getValue(titleDom) : null;
+    var opt = opt || {};
+
+    var params = {
+      url: url
+    };
+
+    if (phoneNumber) {
+      params.phoneNumber = phoneNumber;
+    }
+    if (pageTitle) {
+      params.pageTitle = pageTitle;
     }
 
-    function parseUrl() {
-        var search = location.search;
-        var params = {};
-        
-        if (search.indexOf('?') > -1) {
-            var splitItems = search.replace('?', '').split('&');
+    params.element = 'trackEvent';
 
-            // for (var i in splitItems) {
-            for (var i = 0; i < splitItems.length; i++){
-                var spItem = splitItems[i];
-                var itemArr = spItem.split('=');
-                if (itemArr.length > 1) {
-                    params[itemArr[0].trim()] = itemArr[1];
-                }
-            }
-        }
-
-        return params;
-    }
-
-    options = options || {};
-
-    var acMonitor = new ActionMonitor(options.paramsArray, options.reqUrl);
-    Vue.prototype.$acMonitor = acMonitor;
-
-    Vue.mixin({
-        mounted(){
-            if (this.$options.isPage) {
-                // setTimeout(() => {
-                //     acMonitor.sendPV();                    
-                // }, 400);
-            }
-        }
+    Object.keys(opt).forEach(function (key) {
+      params[key] = opt[key]
     })
+
+    // for (var i in this.keyArr) {
+    for (var i = 0; i < this.keyArr.length; i++) {
+      var key = this.keyArr[i];
+      var value;
+      if (window.sessionStorage && (value = sessionStorage.getItem(key))) {
+        try {
+          params[key] = JSON.parse(value);
+        } catch (e) {
+          params[key] = value;
+        }
+      } else if (window.localStorage && (value = localStorage.getItem(key))) {
+        try {
+          params[key] = JSON.parse(value);
+        } catch (e) {
+          params[key] = value;
+        }
+      } else {
+        var cookieObj = parseCookie();
+        if (cookieObj[key]) {
+          params[key] = cookieObj[key];
+        } else {
+          params[key] = parseUrl()[key];
+        }
+      }
+    }
+
+    var inputs = document.querySelectorAll('[' + INPUT_TAG + ']');
+    // console.log(inputs)
+    for (var k in inputs) {
+      // for (var i = 0; i < inputs.length; i++){
+
+      var inputItem = inputs[k];
+      // var key = inputItem.getAttribute(INPUT_TAG);
+
+      if (typeof inputItem == 'object') {
+        var key = inputItem[INPUT_TAG] || inputItem.getAttribute(INPUT_TAG);
+      }
+
+      if (!params[key]) {
+        var val = getValue(inputItem);
+        if (val && val !== '') {
+          params[key] = val;
+        }
+      }
+
+    }
+    post(this.apiUrl, params);
+
+    // 将百度埋点统一进来
+    if (window._hmt && opt.page && opt.event) {
+      _hmt.push(['_trackEvent', opt.page, 'click', opt.event]);
+    }
+  }
+
+  ActionMonitor.prototype.trackPageview = function (opt) {
+    this.trackEvent(opt);
+
+    // 将百度埋点统一进来
+    if (window._hmt && opt.page) {
+      _hmt.push(['_trackPageview', opt.page]);
+    }
+  }
+
+  function post(url, params) {
+    var xhr = new XMLHttpRequest();
+    var jsonData = JSON.stringify(params);
+
+    if (!url) {
+      throw new Error('action-monitor: request url is null');
+      return;
+    }
+
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-type', 'application/json');
+
+    xhr.send(jsonData);
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState == 4 && xhr.status == 200) {
+        // console.log('action monitor => request success');
+      }
+    }
+  };
+
+  function getValue(dom) {
+    var tagName = dom.tagName;
+
+    if (tagName == 'INPUT') {
+
+      if (dom.type == "checkbox") {
+        if (dom.checked) {
+          return true;
+        }
+      } else if (dom.type == 'radio') {
+        if (dom.checked) {
+          return dom.value;
+        } else {
+          return null;
+        }
+      } else {
+        return dom.value;
+      }
+
+    } else if (tagName == 'TEXTAREA' || tagName == 'SELECT') {
+      return dom.value;
+    } else {
+      return dom.innerText;
+    }
+  }
+
+  function parseCookie() {
+    var cookie = document.cookie;
+    var splitItems = cookie.split(';');
+    var params = {};
+
+    // for (var i in splitItems) {
+    for (var i = 0; i < splitItems.length; i++) {
+      var spItem = splitItems[i];
+      var itemArr = spItem.split('=');
+      if (itemArr.length > 1) {
+        params[itemArr[0].trim()] = itemArr[1];
+      }
+    }
+
+    return params;
+  }
+
+  function parseUrl() {
+    var search = location.search;
+    var params = {};
+
+    if (search.indexOf('?') > -1) {
+      var splitItems = search.replace('?', '').split('&');
+
+      // for (var i in splitItems) {
+      for (var i = 0; i < splitItems.length; i++) {
+        var spItem = splitItems[i];
+        var itemArr = spItem.split('=');
+        if (itemArr.length > 1) {
+          params[itemArr[0].trim()] = itemArr[1];
+        }
+      }
+    }
+
+    return params;
+  }
+
+  options = options || {};
+
+  var acMonitor = new ActionMonitor(options.paramsArray, options.reqUrl);
+  Vue.prototype.$acMonitor = acMonitor;
+
+  Vue.mixin({
+    mounted() {
+      if (this.$options.isPage) {}
+    }
+  })
 
 };
 
 export default {
-    install: install
+  install: install
 }
