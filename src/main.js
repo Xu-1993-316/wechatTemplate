@@ -12,7 +12,7 @@ import {
 } from './common/helpers/utils.js'
 import initPlugin from './initPlugin/index.js'
 initPlugin()
-import '../src/lib/js/anfe-flexible.js' //淘宝布局的js
+import './lib/js/anfe-flexible.js' //淘宝布局的js
 // 引入css
 import './lib/css/transition.css'
 import './lib/css/common.css'
