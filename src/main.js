@@ -1,6 +1,7 @@
 // 引入必要的
 import 'babel-polyfill' // 支持es6的primise等api
 import App from './App'
+import Vue from 'vue'
 import router from './router'
 import store from './vuex/index.js'
 import config from '@/config.js'
@@ -34,6 +35,7 @@ import './lib/css/common.css'
 // import 'mint-ui/lib/style.css'
 
 // 全局的变量
+console.log(Vue)
 window.env = process.env.NODE_ENV
 window.Vue = Vue
 window.v = Vue.prototype
