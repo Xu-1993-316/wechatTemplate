@@ -21,6 +21,10 @@
   background-color: salmon;
 }
 
+.content::-webkit-scrollbar {
+  display: none
+}
+
 .bottom_box {
   position: absolute;
   left: 0;
