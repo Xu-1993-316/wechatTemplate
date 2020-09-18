@@ -3,6 +3,7 @@ import pageDelegate from '@/plugins/pageDelegate.js' // 页面生命周期,页�
 import safeClick from '@/plugins/safeClick.js' //放连点
 import http from '@/plugins/http.js' //封装axios请求
 import storage from '@/plugins/storage.js' //浏览器的缓存设置
+import hintMessage from '@/plugins/hintMessage.js' //提示信息
 import actionMonitor from '@/plugins/action-monitor.js' //埋点
 import config from '@/config.js'
 
@@ -15,6 +16,7 @@ var init = function () {
   Vue.use(storage, {
     scope: config.storageScope
   })
+  Vue.use(hintMessage)
   Vue.use(http, {
     apiGroups: [{
       domain: 'kangebao',

@@ -10,6 +10,6 @@ var routes = [{
   component: Index
 }]
 
-export default new VueRouter({
+export default new Router({
   routes: routes
 });

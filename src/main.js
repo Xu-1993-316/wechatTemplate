@@ -1,7 +1,7 @@
 // 引入必要的
 import 'babel-polyfill' // 支持es6的primise等api
 import App from './App'
-// import Vue from 'vue'
+import Vue from 'vue'
 import router from './router'
 import store from './vuex/index.js'
 import config from '@/config.js'
@@ -12,7 +12,6 @@ import {
   isWechat
 } from './common/helpers/utils.js'
 import initPlugin from './initPlugin/index.js'
-initPlugin()
 import './lib/js/anfe-flexible.js' //淘宝布局的js
 // 引入css
 import './lib/css/transition.css'
@@ -28,16 +27,17 @@ import './lib/css/common.css'
 // Vue.component(swiper.name, swiper);
 // Vue.component(swiperSlide.name, swiperSlide);
 //引入mintUI
-// import {
-//   DatetimePicker
-// } from "mint-ui";
-// Vue.component(DatetimePicker.name, DatetimePicker);
-// import 'mint-ui/lib/style.css'
+import {
+  DatetimePicker
+} from "mint-ui";
+Vue.component(DatetimePicker.name, DatetimePicker);
+import 'mint-ui/lib/style.css'
 
 // 全局的变量
 window.env = process.env.NODE_ENV
 window.Vue = Vue
 window.v = Vue.prototype
+initPlugin()
 Vue.config.productionTip = false
 v.$wxsdk.apiTicket('/act/wechat/shares/sign'); // 微信签名
 v.$wxsdk.setDefaultShare(config.defaultShareOption); // 配置默认的分享

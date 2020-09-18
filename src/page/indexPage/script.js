@@ -1,19 +1,11 @@
 export default {
   isPage: true,
   name: 'indexPage',
-  title: '模板',
-  Data: {
-    message: 'Hello World!'
-  },
+  title: '微信模板',
+  Data: {},
   willEnterPage: function (data) {},
   didEnterPage(data) {},
-  methods: {
-    toSub(params, openClick) {
-      setTimeout(() => {
-        openClick()
-      }, 2000)
-    },
-    toThird() {}
-  },
+  mounted() {},
+  methods: {},
   components: {}
 }

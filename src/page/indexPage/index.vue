@@ -1,13 +1,10 @@
 <template>
   <div class="page">
-    <div class="content_box">
-      <div class="content">
-        <h2>{{message}}</h2>
-        <button v-safeClick="{fn: toSub, params: {name:message}}">第二页</button>
-        <button @click="toThird">第三页</button>
-      </div>
+    <div class="content_container">
+      <div class="content1"></div>
+      <div class="content2"></div>
     </div>
-    <div class="bottom_box"></div>
+    <div class="bottom_container"></div>
   </div>
 </template>
 <script src="./script.js"></script>
